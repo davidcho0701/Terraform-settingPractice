@@ -73,9 +73,10 @@ resource "helm_release" "kube_prometheus_stack" {
         loadBalancerSourceRanges = var.grafana_allowed_cidrs
       }
 
+      # 메모리 상한이 너무 낮으면(예: 256Mi) 시작 직후 OOMKilled 로 계속 재시작합니다.
       resources = {
-        requests = { cpu = "50m", memory = "128Mi" }
-        limits   = { memory = "256Mi" }
+        requests = { cpu = "100m", memory = "256Mi" }
+        limits   = { memory = "768Mi" }
       }
     }
 

@@ -46,6 +46,13 @@ if ! IDENTITY=$(aws sts get-caller-identity --query '[Account,Arn]' --output tex
   die "AWS 자격 증명이 없거나 만료되었습니다. MFA 임시 자격 증명을 다시 발급받아 설정하세요."
 fi
 echo "접속 계정/주체: $IDENTITY"
+
+# get-caller-identity 는 MFA 없이도 성공하므로 MFA 인증 여부를 알 수 없습니다.
+# MFA 필수 정책(ForceMFA)이 있는 계정이면 일반 API 가 거부되므로, 읽기 API 하나로 실제 확인합니다.
+if ! MFA_CHECK=$(aws ec2 describe-vpcs --region ap-northeast-1 --max-items 1 2>&1); then
+  echo "$MFA_CHECK" >&2
+  die "AWS API 호출이 거부되었습니다. MFA 임시 자격 증명(액세스 키가 ASIA 로 시작)이 이 터미널에 설정되어 있는지 확인하세요."
+fi
 warn "회사 AWS 계정입니다. 위 계정이 의도한 계정인지 확인하세요."
 warn "임시 자격 증명은 만료됩니다. apply 는 약 20~25분 걸리므로 만료까지 충분히 남았는지 확인하세요."
 confirm "이 계정으로 계속할까요?" || die "중단했습니다."
